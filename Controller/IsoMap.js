@@ -1,5 +1,72 @@
 var map;
 
+/////////////////////////////////////////////////////////////////////
+var markers;
+//disable the autosize for the purpose of our matrix
+OpenLayers.Popup.FramedCloud.prototype.autoSize = false;
+AutoSizeFramedCloud = OpenLayers.Class(OpenLayers.Popup.FramedCloud, {
+  'autoSize': true
+});
+AutoSizeFramedCloudMinSize = OpenLayers.Class(OpenLayers.Popup.FramedCloud, {
+  'autoSize': true, 
+  'minSize': new OpenLayers.Size(400,400)
+});
+AutoSizeFramedCloudMaxSize = OpenLayers.Class(OpenLayers.Popup.FramedCloud, {
+  'autoSize': true, 
+  'maxSize': new OpenLayers.Size(100,100)
+});
+/**
+* Function: addMarker
+* Add a new marker to the markers layer given the following lonlat, 
+*     popupClass, and popup contents HTML. Also allow specifying 
+*     whether or not to give the popup a close box.
+* 
+* Parameters:
+* ll - {<OpenLayers.LonLat>} Where to place the marker
+* popupClass - {<OpenLayers.Class>} Which class of popup to bring up 
+*     when the marker is clicked.
+* popupContentHTML - {String} What to put in the popup
+* closeBox - {Boolean} Should popup have a close box?
+* overflow - {Boolean} Let the popup overflow scrollbars?
+*/
+
+function addMarker(ll, popupClass, popupContentHTML, closeBox, overflow) {
+  var feature = new OpenLayers.Feature(markers, ll); 
+  feature.closeBox = closeBox;
+  feature.popupClass = popupClass;
+  feature.data.popupContentHTML = popupContentHTML;
+  feature.data.overflow = (overflow) ? "auto" : "hidden";
+
+  var marker = feature.createMarker();
+
+  var markerClick = function (evt) {
+    if (this.popup == null) {
+      this.popup = this.createPopup(this.closeBox);
+      map.addPopup(this.popup);
+      this.popup.show();
+    }
+    else {
+      this.popup.toggle();
+    }
+    currentPopup = this.popup;
+    OpenLayers.Event.stop(evt);
+  };
+  marker.events.register("mousedown", feature, markerClick);
+  markers.addMarker(marker);
+}
+
+function addMarkers() {
+  var ll, popupClass, popupContentHTML;
+  //anchored bubble popup wide long fixed contents autosize closebox
+  ll = new OpenLayers.LonLat(800,300);
+  popupClass = AutoSizeFramedCloud;
+  popupContentHTML = '<img src="../Model/Brentwood.png"></img>';
+  addMarker(ll, popupClass, popupContentHTML, true);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
 var style_hidden = OpenLayers.Util.extend({},OpenLayers.Feature.Vector.style['default'] );
   style_hidden.strokeColor = "yellow";
   style_hidden.fillColor = "green";
@@ -11,9 +78,15 @@ var style_blue = OpenLayers.Util.extend({},OpenLayers.Feature.Vector.style['defa
   style_blue.fillColor = "yellow";
   style_blue.strokeWidth = 1;
 
+
 function init(){
-  map = new OpenLayers.Map('map');
   
+  map = new OpenLayers.Map('map');
+//////////////////////////////////////////////////
+  markers = new OpenLayers.Layer.Markers("zibo");
+  map.addLayer(markers);
+  addMarkers();
+/////////////////////////////////////////////////
   var graphic = new OpenLayers.Layer.Image(
     'City Lights',
     '../Model/Brentwood.png',
@@ -33,7 +106,7 @@ function init(){
 
   map.addLayers([graphic]);
 
-var vectors = new OpenLayers.Layer.Vector("vector", {isBaseLayer: false});
+  var vectors = new OpenLayers.Layer.Vector("vector", {isBaseLayer: false});
   
   map.addLayers([vectors]);
   var feature = new OpenLayers.Feature.Vector(
