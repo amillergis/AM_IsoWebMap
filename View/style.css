@@ -77,8 +77,8 @@ h6 {
  * Map Examples Specific
  */
 .smallmap {
-    width: 1024px;
-    height: 512px;
+    width: 1200px;
+    height: 800px;
     border: 1px solid #ccc;
 }
 #tags {
